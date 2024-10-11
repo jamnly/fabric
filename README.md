@@ -5,10 +5,50 @@
 `fabric 2.2.0`  
 
 ## 环境安装
-下载fabric 2.2.0源码进行安装和编译
+### go 安装
+* `wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz `
+* 删除旧版本 `sudo rm -rf /usr/local/go` 
+* `sudo tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz`
+* `sudo gedit  ~/.bashrc`
+* 最下面两行加入，如果有旧版本的路径不同，记得改路径
+```
+export GOROOT=/usr/local/go
+export PATH=$PATH:$GOROOT/bin
+
+```
+* `source ~/.bashrc`
+* `go version`
+* 出现这个就算成功！ `go version go1.21.0 linux/amd64`
+#### 配置go代理
+* `go env -w GO111MODULE=on`
+* `go env -w GOPROXY=https://goproxy.cn,direct`
+### fabric安装
+* 浏览器打开下载压缩包 https://github.com/hyperledger/fabric/releases/download/v2.2.15/hyperledger-fabric-linux-amd64-2.2.15.tar.gz
+* 浏览器打开下载压缩包 https://github.com/hyperledger/fabric-ca/releases/download/v1.5.9/hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz
+* 解压到自己想要的位置 `tar -xzvf hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz -C /home/test/fabric/`
+* 同上`tar -xzvf hyperledger-fabric-linux-amd64-2.2.15.tar.gz -C /home/test/fabric/`
+* `sudo gedit  ~/.bashrc`
+* 最下面行加入，如果有旧版本的路径不同，记得改路径
+```
+export PATH=$PATH:/home/test/fabric/bin
+```
+* `source ~/.bashrc`
+* `peer version`
+* 出现这个就算成功！ 
+
+```
+peer:
+ Version: 2.2.15
+ Commit SHA: 79c8cc2
+ Go version: go1.21.6
+ OS/Arch: linux/amd64
+ Chaincode:
+  Base Docker Label: org.hyperledger.fabric
+  Docker Namespace: hyperledger
+```
 
 ## 节点情况
-`peer0.org1.example.com` `peer0.org2.example.com` `peer0.org3.example.com` `orderer.example.com`
+`peer0.org1.example.com` `peer0.org2.example.com` `peer1.org2.example.com` `peer0.org3.example.com` `orderer.example.com`
 
 ## 执行命令（一切顺利的话）
 * 执行`sh generate-config-file.sh`创建证书，创世块、通道文件和锚点文件等
