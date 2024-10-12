@@ -65,7 +65,8 @@ func (sc *SimpleChaincode) Read(stub shim.ChaincodeStubInterface, key string) (s
 // Invoke 方法
 func (sc *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 	function, args := stub.GetFunctionAndParameters()
-		fmt.Printf(function,args)
+	fmt.Printf("Function: %s, Args: %v\n", function, args) // 修改此行
+	fmt.Printf("111111111111111111\n") // 确保输出在新行
 	switch function {
 	case "create":
 		if len(args) != 2 {

@@ -3,6 +3,9 @@ echo "current path: $(pwd)"
 echo "remove data/peer"
 rm -rf ./data/peer/org1-peer0
 
+
+
+
 export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0
 #export FABRIC_LOGGING_SPEC=INFO
 export FABRIC_LOGGING_SPEC=INFO
@@ -25,6 +28,8 @@ export CORE_PEER_LOCALMSPID=Org1MSP
 export CORE_PEER_TLS_CERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
 export CORE_PEER_TLS_KEY_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
 export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem
+export CORE_PEER_TLS_CLIENTROOTCAS_FILES=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp
 
 # Ledger state database path
 export CORE_PEER_FILESYSTEMPATH=$(pwd)/data/peer/org1-peer0

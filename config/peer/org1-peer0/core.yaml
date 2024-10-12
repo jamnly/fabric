@@ -28,7 +28,7 @@ peer:
 
 
     gossip:
-        bootstrap: peer0.org1.example.com:7051,peer0.org2.example.com:8050,peer0.org3.example.com:9050
+        bootstrap: peer0.org1.example.com:7051,peer0.org2.example.com:8050,peer1.org2.example.com:8052,peer0.org3.example.com:9050,peer0.org3.example.com:9052,peer0.org4.example.com:10050
 
 
         useLeaderElection: false
@@ -93,14 +93,14 @@ peer:
         enabled:  true
         clientAuthRequired: false
         cert:
-            file: ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
+            file: /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
         key:
-            file: ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
+            file: /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
         rootcert:
-            file: ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem
+            file: /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem
         clientRootCAs:
             files:
-              - ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+              - /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
         clientKey:
             file:
         clientCert:
@@ -125,7 +125,7 @@ peer:
             Hash:
             Security:
 
-    mspConfigPath: ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp
+    mspConfigPath: /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp
 
     localMspId: Org1MSP
 
@@ -230,10 +230,10 @@ chaincode:
       - name: simple
         path: ./external
         propagateEnvironment:
-         - ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
-         - ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
-         - ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
-         - ../../crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem
+         - /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+         - /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
+         - /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
+         - /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem
 
 
     installTimeout: 300s

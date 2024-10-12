@@ -64,8 +64,10 @@ peer:
 * 前往 `cd chaincode/org2-peer0/sampleChaincode` 执行`./sample` 启动peer0.org2的链码
 * 前往 `cd chaincode/org2-peer1/sampleChaincode` 执行`./sample` 启动peer1.org2的链码
 * 前往 `cd chaincode/org3-peer0/sampleChaincode` 执行`./sample` 启动peer0.org3的链码
+* 回到根目录
 可以查看peer.sh里的环境变量，进行引用
 ```
+# 设置 peer0.org1.example.com 的环境变量
     export FABRIC_CFG_PATH=$(pwd)/config/
     export CORE_PEER_ID=peer0.org1.example.com
     export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
@@ -111,7 +113,11 @@ peer chaincode invoke \
   ```
 
 * 执行`peer chaincode query -C mychannel -n sample -c '{"Args":["read","a"]}' `查询a
-
+* 查询的时候也可以带上证书，这样org1peer0那边的链码也会进行查询，也可以多带几个证书
+```peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' /
+--peerAddresses peer0.org1.example.com:7051 /
+--tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
+```
 
 ## 可能需要修改的地方
 
@@ -139,6 +145,13 @@ lsof -i :9051
 * 关联文件：`chaincode/org1-peer0/sampleChaincode/external/connection.json` `chaincode/org1-peer0/sampleChaincode/main.go` 
 * 请修改关于端口的地方
 * 并需要重新在/external下  `tar cfz code.tar.gz connection.json `  `tar cfz sample.tgz metadata.json code.tar.gz` 和在/sampleChaincode 下 go build `go build`
+### 增加新的peer或org的情况
+* 必须到所有的`core.yaml` 里
+```
+gossip:
+        bootstrap: peer0.org1.example.com:7051,peer0.org2.example.com:8050,peer1.org2.example.com:8052,peer0.org3.example.com:9050
+```
+* 加上新增加的peer！
 
 ## 添加org
 
@@ -151,10 +164,14 @@ lsof -i :10051
 lsof -i :7000
 
 ```
-* 在当前目录下 新建 `org4-peer0.sh`
-* 在config/peer/下 新建`org4-peer0`文件夹 进入再新建（最好是复制org3-peer0）的core.yaml文件 `core.yaml`
-* 在chaincode/下 新建`org4-peer0`文件夹 进入在新建（自定义的合约名称，可参考org3-peer0里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` 
- ### 需要修改的地方
+### 静态加入
+* 在当前目录下 新建 `org4-peer0.sh` [org4-peer0.sh详细内容](#0)
+* 在config/peer/下 新建`org4-peer0`文件夹 进入再新建（最好是复制org3-peer0）的core.yaml文件 `core.yaml` [core.yaml详细内容](#1)
+* 在chaincode/下 新建`org4-peer0`文件夹 进入在新建（自定义的合约名称，可参考org3-peer0里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` [connection.json 详细内容](#2) [metadata.json 详细内容](#3)
+ #### 需要修改的地方
+
+<span id="0"></span>
+
 * `org4-peer0.sh`:
 ```
 echo "######org4 peer0 startup start######"
@@ -185,6 +202,8 @@ export CORE_OPERATIONS_LISTENADDRESS=peer0.org4.example.com:10543
 export CORE_PEER_TLS_CERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/server.crt
 export CORE_PEER_TLS_KEY_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/server.key
 export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/msp/tlscacerts/tlsca.org4.example.com-cert.pem
+export CORE_PEER_TLS_CLIENTROOTCAS_FILES=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/msp
 
 # Ledger state database path
 export CORE_PEER_FILESYSTEMPATH=$(pwd)/data/peer/org4-peer0
@@ -340,6 +359,8 @@ peer lifecycle chaincode commit \
             Capabilities:
                 <<: *ApplicationCapabilities
 ```
+<span id="1"></span>
+
 * 在config/peer/org4-peer0 下 `core.yaml`:添加内容 
 ```
 
@@ -668,6 +689,8 @@ metrics:
     Users:
       Count: 1
 ```
+<span id="2"></span>
+
 * 在chaincode/org4-peer0/sampleChaincode/external 下 `connection.json` 编写
 ```
 {
@@ -681,7 +704,9 @@ metrics:
 }
 
 ```
-* 在chaincode/org4-peer0/sampleChaincode/external 下 `connection.json` 编写
+<span id="3"></span>
+
+* 在chaincode/org4-peer0/sampleChaincode/external 下 `metadata.json` 编写
 ```
 {"path":"","type":"external","label":"sample"}
 
@@ -711,7 +736,7 @@ Org4peer0: xxxx
 ```
 
 ### 编写新的链码
-* !!!!!!!!!!!!!!!!!!!!!
+**!!!!!!!!!!!!!!!!!!!!!**
 * 请复制上面的xxx！，这将在下面的内容里用到，并替换
 * ccid := "sample:xxx" //这里替换!!!
 * 在chaincode/org4-peer0/sampleChaincode/ 下 `main.go` 编写
@@ -898,20 +923,189 @@ peer chaincode invoke \
   --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
   -c '{"function":"create","Args":["b","20"]}'
 ```
+### 动态加入org
+* 假设动态加入`org4peer0`
+* 即不执行`sh generate-config-file.sh`重新创建 
+* 在当前目录下 新建 `org4-peer0.sh` [org4-peer0.sh详细内容](#0)
+* 在config/peer/下 新建`org4-peer0`文件夹 进入再新建（最好是复制org3-peer0）的core.yaml文件 `core.yaml` [core.yaml详细内容](#1)
+* 在chaincode/下 新建`org4-peer0`文件夹 进入再新建（自定义的合约名称，可参考org3-peer0里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` [connection.json 详细内容](#2) [metadata.json 详细内容](#3)
+* 在config/下 新建 `org4-configtx`文件夹 进入再新建 `configtx.yaml`作为org4的configtx [configtx.yaml 详细内容](#configtx)
+* 在config/cryptogen/下 新建`crypto-config-org4.yaml`文件 [crypto-config-org4.yaml 详细内容](#crypto-config-org)
+ #### 需要修改的地方
+
+ <span id="configtx"></span>
+
+* `configtx.yaml`:
+```
+Organizations:
+    - &Org4
+        # DefaultOrg defines the organization which is used in the sampleconfig
+        # of the fabric.git development environment
+        Name: Org4MSP
+
+        # ID to load the MSP definition as
+        ID: Org4MSP
+
+        MSPDir: ../crypto-config/peerOrganizations/org4.example.com/msp
+
+        # Policies defines the set of policies at this level of the config tree
+        # For organization policies, their canonical path is usually
+        #   /Channel/<Application|Orderer>/<OrgName>/<PolicyName>
+        Policies:
+            Readers:
+                Type: Signature
+                Rule: "OR('Org4MSP.member')"
+            Writers:
+                Type: Signature
+                Rule: "OR('Org4MSP.member')"
+            Admins:
+                Type: Signature
+                Rule: "OR('Org4MSP.admin')"
+            Endorsement:
+                Type: Signature
+                Rule: "OR('Org4MSP.member')"
+        
+        AnchorPeers:
+            - Host: peer0.org4.example.com
+              Port: 10050
+
+```
+ <span id="crypto-config-org4"></span>
+
+ * `crypto-config-org4`: 这里设置了2个peer
+```
+PeerOrgs:
+  - Name: Org4
+    Domain: org4.example.com
+    EnableNodeOUs: false
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+```
+* `cryptogen generate --config=./config/cryptogen/crypto-config-org4.yaml --output=./config/crypto-config` 生成组织文件
+* `cd config/org4-configtx/`进入org4的configtx `configtxgen -printOrg Org4MSP > ../crypto-config/peerOrganizations/org4.example.com/msp/org4.json` 生成org4的msp 
+*  `cd ../../` 回到根目录 , 使用org1的配置
+```
+    export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
+    export CORE_PEER_ID=peer0.org1.example.com
+    export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_LOCALMSPID=Org1MSP
+    export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
+    export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+```
+* 获取最新的配置块
+* `peer channel fetch config ./channel-artifacts/config_block.pb -o orderer.example.com:7050 -c mychannel --tls --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem` 
+* 进入通道文件夹 `cd channel-artifacts`
+* 将配置转换为JSON并将其修剪下来
+*  `configtxlator proto_decode --input config_block.pb --type common.Block --output config_block.json` `jq ".data.data[0].payload.data.config" config_block.json > config.json` 
+*  添加org4锚节点和MSP配置
+* `jq -s '.[0] * {"channel_group":{"groups":{"Application":{"groups": {"Org4MSP":.[1]}}}}} | .channel_group.groups.Application.groups.Org4MSP.values += {"AnchorPeers":{"mod_policy": "Admins","value":{"anchor_peers": [{"host": "peer0.org4.example.com","port": 10050}]},"version": "0"}}' config.json ../config/crypto-config/peerOrganizations/org4.example.com/msp/org4.json > modified_config.json`
+* 现在可以将原始和修改后的通道配置转换回protobuf格式，并计算它们之间的差异
+* `configtxlator proto_encode --input config.json --type common.Config --output config.pb`
+* `configtxlator proto_encode --input modified_config.json --type common.Config --output modified_config.pb`
+* `configtxlator compute_update --channel_id mychannel --original config.pb --updated modified_config.pb --output config_update.pb`
+* `configtxlator proto_decode --input config_update.pb --type common.ConfigUpdate | jq . > config_update.json`
+* `echo '{"payload":{"header":{"channel_header":{"channel_id":"mychannel","type":2}},"data":{"config_update":'$(cat config_update.json)'}}}' | jq . > config_update_in_envelope.json`
+* `configtxlator proto_encode --input config_update_in_envelope.json --type common.Envelope --output config_update_in_envelope.pb`
+* 回到根目录 `cd ..` 
+* org1进行签名
+* `peer channel signconfigtx -f channel-artifacts/config_update_in_envelope.pb` 
+* 之后切换加入通道的org的peer0配置，都进行签名，最后一个进行更新操作
+* `peer channel update -f channel-artifacts/config_update_in_envelope.pb -c mychannel -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com --tls --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem`
+* `sudo gedit /etc/hosts `添加 `127.0.0.1   peer0.org4.example.com`
+* 下面使用peer channel fetch命令拉取创世区块：
+* `peer channel fetch 0 channel-artifacts/mychannel.block -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com -c mychannel --tls --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"`
+* 这时候可以启动org4peer0的节点了，并切换他的环境
+* `sh org4-peer0.sh` 
+* 加入通道
+* `peer channel join -b channel-artifacts/mychannel.block`
+* `cd chaincode/org4-peer0/sampleChaincode/external`
+* 打包 安装 build 链码
+* [打包 安装 build 链码 详细内容](#chaincode)
+* 回到根目录 `cd ../../../../`
+* 批准链码
+```
+peer lifecycle chaincode approveformyorg \
+        -o orderer.example.com:7050 \
+        --ordererTLSHostnameOverride orderer.example.com \
+        --channelID mychannel \
+        --name sample \
+        --version 1 \
+        --package-id $PACKAGE_ID \
+        --sequence 1 \
+        --init-required \
+        --tls \
+        --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem
+		
+```
+* 初始化链码
+```
+peer chaincode invoke \
+  -o orderer.example.com:7050 \
+  -C "mychannel" \
+  -n "sample" \
+  --isInit \
+  --tls true \
+  --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem \
+  --peerAddresses peer0.org1.example.com:7051 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt \
+  --peerAddresses peer0.org2.example.com:8050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt \
+  --peerAddresses peer1.org2.example.com:8052 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt \
+  --peerAddresses peer0.org3.example.com:9050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt \
+  --peerAddresses peer0.org4.example.com:10050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
+  -c '{"Args":[]}'
+  ```
+* 设置c
+```
+  peer chaincode invoke \
+  -o orderer.example.com:7050 \
+  -C "mychannel" \
+  -n "sample" \
+  --tls true \
+  --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem \
+  --peerAddresses peer0.org1.example.com:7051 \
+  --tlsRootCertFiles /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt \
+  --peerAddresses peer0.org2.example.com:8050 \
+  --tlsRootCertFiles /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt \
+  --peerAddresses peer0.org3.example.com:9050 \
+  --tlsRootCertFiles /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt \
+  --peerAddresses peer0.org4.example.com:10050 \
+  --tlsRootCertFiles /home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
+  -c '{"function":"create","Args":["c","20"]}'
+  ```
+* 查询c
+* `  peer chaincode query -C mychannel -n sample -c '{"Args":["read","c"]}'`
+* 查询的时候也可以带上证书，这样org1peer0那边的链码也会进行查询，也可以多带几个证书
+```peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' /
+--peerAddresses peer0.org1.example.com:7051 /
+--tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
+```
+
 ## 增加peer
 * 假设增加peer1.org4.example.com
-* 以下端口会占用10052 10053 7001！
+* 以下端口会占用10052 10053 7000！
 * 检查端口是否被占用
+**同一个组织下的peer统一使用peer0的链码**
 ```
 lsof -i :10052
 lsof -i :10053
-lsof -i :7001
+lsof -i :7000
 
 ```
-* 在当前目录下 新建 `org4-peer1.sh`
-* 在config/peer/下 新建`org4-peer1`文件夹 进入再新建（最好是复制org3-peer1）的core.yaml文件 `core.yaml`
-* 在chaincode/下 新建`org4-peer1`文件夹 进入在新建（自定义的合约名称，可参考org3-peer1里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` 
- ### 需要修改的地方
+### 静态加入
+* 在当前目录下 新建 `org4-peer1.sh` [org4-peer1.sh 详细内容](#org4-peer1.sh)
+* 在config/peer/下 新建`org4-peer1`文件夹 进入再新建（最好是复制org3-peer1）的core.yaml文件 `core.yaml`[org4-peer1-core 详细内容](#org4-peer1-core)
+* 在chaincode/下 保证有`org4-peer0`文件夹 里面要有org4peer0的链码
+ #### 需要修改的地方
+
+<span id="org4-peer1.sh"> </span>
+
 * `org4-peer1.sh`:
 ```
 echo "######org4 peer1 startup start######"
@@ -942,7 +1136,8 @@ export CORE_OPERATIONS_LISTENADDRESS=peer1.org4.example.com:11543
 export CORE_PEER_TLS_CERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/tls/server.crt
 export CORE_PEER_TLS_KEY_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/tls/server.key
 export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/msp/tlscacerts/tlsca.org4.example.com-cert.pem
-
+export CORE_PEER_TLS_CLIENTROOTCAS_FILES=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/msp
 # Ledger state database path
 export CORE_PEER_FILESYSTEMPATH=$(pwd)/data/peer/org4-peer1
 
@@ -1014,6 +1209,9 @@ declare -A CC_SRC_PATHS=(
   ["Org4Peer1"]="$(pwd)/chaincode/org4-peer1/sampleChaincode/external/"
 )
 ```
+
+<span id="org4-peer1-core"></span>
+
 * 在config/peer/org4-peer1 下 `core.yaml`:添加内容 
 ```
 
@@ -1342,25 +1540,8 @@ metrics:
     Users:
       Count: 1
 ```
-* 在chaincode/org4-peer1/sampleChaincode/external 下 `connection.json` 编写
-```
-{
-    "address": "0.0.0.0:7001",
-    "dial_timeout": "10s",
-    "tls_required": false,
-    "client_auth_required": true,
-    "client_key": "-----BEGIN EC PRIVATE KEY----- ... -----END EC PRIVATE KEY-----",
-    "client_cert": "-----BEGIN CERTIFICATE----- ... -----END CERTIFICATE-----",
-    "root_cert": "-----BEGIN CERTIFICATE---- ... -----END CERTIFICATE-----"
-}
 
-```
-* 在chaincode/org4-peer1/sampleChaincode/external 下 `connection.json` 编写
-```
-{"path":"","type":"external","label":"sample"}
-
-```
-* 以下前提为安装了peer0.org4！，如果你添加的别的peer，别按照下面的来哦
+* 以下前提为安装了peer0.org4！，如果你想添加的别的peer，别按照下面的来哦
 * 执行`sh generate-config-file.sh`创建证书，创世块、通道文件和锚点文件等
 * 执行`sh orderer.sh`启动orderer节点
 * 执行`sh org1-peer0.sh`启动peer0.org1节点
@@ -1376,168 +1557,10 @@ metrics:
 * 前往 `cd chaincode/org2-peer1/sampleChaincode` 执行`./sample` 启动peer1.org2的链码
 * 前往 `cd chaincode/org3-peer0/sampleChaincode` 执行`./sample` 启动peer0.org3的链码
 * 前往 `cd chaincode/org4-peer0/sampleChaincode` 执行`./sample` 启动peer0.org4的链码
-* 你会得到以下内容，xxxxxx即为peer1.org4的需要安装的链码
+**由于org4peer1属于org4，所以只能使用org4peer0的链码**
+* 所以直接去[这里](#chaincode) 去到org4-peer4的链码文件那 install就可以了
+* 初始化 （如果org4peer0初始化过了也就不用了）
 ```
-##All Package IDs:
-Org2peer1: sample:c7ea2b0af46393fdba0467b5755980955a4a1080f203472280da4e608d920dbf
-Org2peer0: sample:a2e9208cf7edec5352d0efd78f2ac86a50b68c373a260ee818e0f83c9985788f
-Org1peer0: sample:541650006fca0f91d04695fe29f8891e6f5bed60fa2d0bdda67c064a0d528e37
-Org3peer0: sample:8cc38988372d607b605d88d7c7cd521d252fe3eb086cb75c83a24e10c710b1e2
-Org4peer0: xxx
-Org4peer1: xxxxxx
-```
-
-### 编写新的链码
-* !!!!!!!!!!!!!!!!!!!!!
-* 请复制上面的xxxxxx！，这将在下面的内容里用到，并替换
-* ccid := "sample:xxx" //这里替换!!!
-* 在chaincode/org4-peer1/sampleChaincode/ 下 `main.go` 编写
-```
-package main
-
-import (
-	"errors"
-	"fmt"
-
-	"github.com/hyperledger/fabric-chaincode-go/shim"
-	pb "github.com/hyperledger/fabric-protos-go/peer" // 确保导入这个包
-)
-
-// SimpleChaincode example simple Chaincode implementation
-type SimpleChaincode struct {
-}
-
-// Init 方法
-func (sc *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response {
-	// 可以在这里进行初始化逻辑，例如设置初始状态
-	return shim.Success(nil)
-}
-
-// 上链
-func (sc *SimpleChaincode) Create(stub shim.ChaincodeStubInterface, key string, value string) error {
-	existing, err := stub.GetState(key)
-	if err != nil {
-		return errors.New("查询失败！")
-	}
-	if existing != nil {
-		return fmt.Errorf("添加数据错误！%s已经存在。", key)
-	}
-	err = stub.PutState(key, []byte(value))
-	if err != nil {
-		return errors.New("添加数据失败！")
-	}
-	return nil
-}
-
-// 更新
-func (sc *SimpleChaincode) Update(stub shim.ChaincodeStubInterface, key string, value string) error {
-	bytes, err := stub.GetState(key)
-	if err != nil {
-		return errors.New("查询失败！")
-	}
-	if bytes == nil {
-		return fmt.Errorf("没有查询到%s对应的数据", key)
-	}
-	err = stub.PutState(key, []byte(value))
-	if err != nil {
-		return errors.New("更新失败：" + err.Error())
-	}
-	return nil
-}
-
-// 查询
-func (sc *SimpleChaincode) Read(stub shim.ChaincodeStubInterface, key string) (string, error) {
-	bytes, err := stub.GetState(key)
-	if err != nil {
-		return "", errors.New("查询失败！")
-	}
-	if bytes == nil {
-		return "", fmt.Errorf("数据不存在，读到的%s对应的数据为空！", key)
-	}
-	return string(bytes), nil
-}
-
-// Invoke 方法
-func (sc *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-	function, args := stub.GetFunctionAndParameters()
-	switch function {
-	case "create":
-		if len(args) != 2 {
-			return shim.Error("参数个数不正确！")
-		}
-		err := sc.Create(stub, args[0], args[1])
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		return shim.Success(nil)
-
-	case "update":
-		if len(args) != 2 {
-			return shim.Error("参数个数不正确！")
-		}
-		err := sc.Update(stub, args[0], args[1])
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		return shim.Success(nil)
-
-	case "read":
-		if len(args) != 1 {
-			return shim.Error("参数个数不正确！")
-		}
-		value, err := sc.Read(stub, args[0])
-		if err != nil {
-			return shim.Error(err.Error())
-		}
-		return shim.Success([]byte(value))
-
-	default:
-		return shim.Error("无效的函数调用！")
-	}
-}
-
-// main function
-func main() {
-	fmt.Println("main start...")
-
-	// The ccid is assigned to the chaincode on install (using the “peer lifecycle chaincode install <package>” command)
-	ccid := "sample:xxx" //这里替换!!!
-
-	server := &shim.ChaincodeServer{
-		CCID:    ccid,
-		Address: "0.0.0.0:7001",
-		CC:      new(SimpleChaincode),
-		TLSProps: shim.TLSProperties{
-			Disabled:      true,
-		},
-	}
-
-	err := server.Start()
-	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
-		return
-	}
-}
-
-```
-* 之后保证go版本要在1.21以上
-* `go mod init sample` 这里的sample可以自定义
-* `go mod tidy`
-* `go build` 之后会生成一个sample文件
-* `./sample` 启动合约.
-* 使用`peer.sh`里的peer1.org4的环境
-```
-    export FABRIC_CFG_PATH=$(pwd)/config/peer/org4-peer1/
-    export CORE_PEER_ID=peer1.org4.example.com
-    export CORE_PEER_ADDRESS=peer1.org4.example.com:10052
-    export CORE_PEER_TLS_ENABLED=true
-    export CORE_PEER_LOCALMSPID=Org4MSP
-    export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp
-    export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/tls/ca.crt
-```
-* 初始化
-```
-
 peer chaincode invoke \
   -o orderer.example.com:7050 \
   -C "mychannel" \
@@ -1574,12 +1597,101 @@ peer chaincode invoke \
   --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
   -c '{"function":"create","Args":["b","20"]}'
 ```
-* 由于org4peer1属于org4组织的，所以在调用查询的时候需要使用
-* `peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' --peerAddresses peer0.org4.example.com:10050 --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt `
+* 查询b
+* `peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' `
+### 动态加入peer
+* 假设动态加入 `org4peer1`
+* 即不执行`sh generate-config-file.sh`重新创建 
+**前提得有org4-peer0已经加入了！**
+* 在当前目录下 新建 `org4-peer1.sh` [org4-peer1.sh 详细内容](#org4-peer1.sh)
+* 在config/peer/下 新建`org4-peer1`文件夹 进入再新建（最好是复制org3-peer1）的core.yaml文件 `core.yaml`[org4-peer1-core 详细内容](#org4-peer1-core)
+* 在chaincode/下 保证有`org4-peer0`文件夹 里面要有org4peer0的链码
+* 使用`peer.sh` 里的 org4-peer1 的环境变量
+```
+export FABRIC_CFG_PATH=$(pwd)/config/peer/org4-peer1/
+    export CORE_PEER_ID=peer1.org4.example.com
+    export CORE_PEER_ADDRESS=peer1.org4.example.com:10052
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_LOCALMSPID=Org4MSP
+    export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp
+    export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer1.org4.example.com/tls/ca.crt
+```
+* 使用peer channel fetch命令拉取创世区块：
+* `peer channel fetch 0 channel-artifacts/mychannel.block -o localhost:7050 --ordererTLSHostnameOverride orderer.example.com -c mychannel --tls --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"`
+* 加入通道
+* `peer channel join -b channel-artifacts/mychannel.block`
+**由于org4peer1属于org4，所以只能使用org4peer0的链码**
+* 所以直接去[这里](#chaincode) 去到org4-peer4的链码文件那 install就可以了
+* 初始化 （如果org4peer0初始化过了也就不用了）
+```
+peer chaincode invoke \
+  -o orderer.example.com:7050 \
+  -C "mychannel" \
+  -n "sample" \
+  --isInit \
+  --tls true \
+  --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem \
+  --peerAddresses peer0.org1.example.com:7051 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt \
+  --peerAddresses peer0.org2.example.com:8050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt \
+  --peerAddresses peer0.org3.example.com:9050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt \
+  --peerAddresses peer0.org4.example.com:10050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
+  -c '{"Args":[]}'
+
+```
+* 设置c属性
+```
+  peer chaincode invoke \
+  -o orderer.example.com:7050 \
+  -C "mychannel" \
+  -n "sample" \
+  --tls true \
+  --cafile $(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem \
+  --peerAddresses peer0.org1.example.com:7051 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt \
+  --peerAddresses peer0.org2.example.com:8050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt \
+  --peerAddresses peer0.org3.example.com:9050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt \
+  --peerAddresses peer0.org4.example.com:10050 \
+  --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
+  -c '{"function":"create","Args":["c","20"]}'
+```
+* 查询c
+* `peer chaincode query -C mychannel -n sample -c '{"Args":["read","c"]}' `
+* 查询的时候也可以带上证书，这样org1peer0那边的链码也会进行查询，也可以多带几个证书
+```peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' /
+--peerAddresses peer0.org1.example.com:7051 /
+--tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
+```
+
 ## 改变通道名称
 * 默认是mychannel 想要更改的话，需要更改以下三个文件包括invoke之后的命令
 * `create_channel1.sh` `join_channel.sh` `approveformyorg_chaincode.sh` 中的 CHANNEL_NAME
-## 
+
+<span id="chaincode"> </span>
+
+## 打包 安装 build 链码 
+* 必须保证go版本要在1.21以上
+* 打包路径一般为 `chaincode/org4-peer0/sampleChaincode/external` 下有`connection.json`和`metadata.json`文件[connection.json 详细内容](#2) [metadata.json 详细内容](#3)
+* 打包链码
+* `tar cfz code.tar.gz connection.json ` `tar cfz sample.tgz metadata.json code.tar.gz`
+* 安装链码(需要先切换成需要安装链码的peer环境)
+* `peer lifecycle chaincode install sample.tgz`
+* 查询链码
+* `peer lifecycle chaincode queryinstalled`
+* 出现如 Package ID: sample:xxx, Label: sample
+* `export PACKAGE_ID=sample:xxx`
+* build 链码
+* `cd ../` 
+* `go mod init sample` 这里的sample可以自定义
+* `go mod tidy`
+* `go build` 之后会生成一个sample文件
+* `./sample` 启动合约
+
 
 
 

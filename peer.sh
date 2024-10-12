@@ -41,5 +41,24 @@ setPeerOrg3Peer0() {
     export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp
     export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt
 }
-
+# 设置 peer1.org3.example.com 的环境变量
+setPeerOrg3Peer1() {
+    export FABRIC_CFG_PATH=$(pwd)/config/peer/org3-peer1/
+    export CORE_PEER_ID=peer1.org3.example.com
+    export CORE_PEER_ADDRESS=peer1.org3.example.com:9052
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_LOCALMSPID=Org3MSP
+    export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/users/Admin@org3.example.com/msp
+    export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer1.org3.example.com/tls/ca.crt
+}
+# 设置 peer0.org4.example.com 的环境变量
+setPeerOrg4Peer0() {
+    export FABRIC_CFG_PATH=$(pwd)/config/peer/org4-peer0/
+    export CORE_PEER_ID=peer0.org4.example.com
+    export CORE_PEER_ADDRESS=peer0.org4.example.com:10050
+    export CORE_PEER_TLS_ENABLED=true
+    export CORE_PEER_LOCALMSPID=Org4MSP
+    export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/users/Admin@org4.example.com/msp
+    export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt
+}
 
