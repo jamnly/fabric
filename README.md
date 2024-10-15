@@ -164,13 +164,15 @@ lsof -i :10051
 lsof -i :7000
 
 ```
-### 静态加入
+<span id=static_join></span>
+### 静态加入org
 * 在当前目录下 新建 `org4-peer0.sh` [org4-peer0.sh详细内容](#0)
 * 在config/peer/下 新建`org4-peer0`文件夹 进入再新建（最好是复制org3-peer0）的core.yaml文件 `core.yaml` [core.yaml详细内容](#1)
 * 在chaincode/下 新建`org4-peer0`文件夹 进入在新建（自定义的合约名称，可参考org3-peer0里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` [connection.json 详细内容](#2) [metadata.json 详细内容](#3)
  #### 需要修改的地方
 
 <span id="0"></span>
+[回到动态加入org](#dynamic_join)
 
 * `org4-peer0.sh`:
 ```
@@ -360,10 +362,11 @@ peer lifecycle chaincode commit \
                 <<: *ApplicationCapabilities
 ```
 <span id="1"></span>
+[回到静态加入org](#static_join)
+[回到动态加入org](#dynamic_join)
 
 * 在config/peer/org4-peer0 下 `core.yaml`:添加内容 
 ```
-
 peer:
 
     id: peer0.org4.example.com
@@ -689,7 +692,9 @@ metrics:
     Users:
       Count: 1
 ```
-<span id="2"></span>
+ <span id="2"> </span>
+[回到静态加入org](#static_join)
+[回到动态加入org](#dynamic_join)
 
 * 在chaincode/org4-peer0/sampleChaincode/external 下 `connection.json` 编写
 ```
@@ -705,6 +710,8 @@ metrics:
 
 ```
 <span id="3"></span>
+[回到静态加入org](#static_join)
+[回到动态加入org](#dynamic_join)
 
 * 在chaincode/org4-peer0/sampleChaincode/external 下 `metadata.json` 编写
 ```
@@ -923,6 +930,8 @@ peer chaincode invoke \
   --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org4.example.com/peers/peer0.org4.example.com/tls/ca.crt \
   -c '{"function":"create","Args":["b","20"]}'
 ```
+<span id=dynamic_join></span>
+
 ### 动态加入org
 * 假设动态加入`org4peer0`
 * 即不执行`sh generate-config-file.sh`重新创建 
@@ -930,7 +939,7 @@ peer chaincode invoke \
 * 在config/peer/下 新建`org4-peer0`文件夹 进入再新建（最好是复制org3-peer0）的core.yaml文件 `core.yaml` [core.yaml详细内容](#1)
 * 在chaincode/下 新建`org4-peer0`文件夹 进入再新建（自定义的合约名称，可参考org3-peer0里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` [connection.json 详细内容](#2) [metadata.json 详细内容](#3)
 * 在config/下 新建 `org4-configtx`文件夹 进入再新建 `configtx.yaml`作为org4的configtx [configtx.yaml 详细内容](#configtx)
-* 在config/cryptogen/下 新建`crypto-config-org4.yaml`文件 [crypto-config-org4.yaml 详细内容](#crypto-config-org)
+* 在config/cryptogen/下 新建`crypto-config-org4.yaml`文件 [crypto-config-org4.yaml 详细内容](#crypto-config-org4)
  #### 需要修改的地方
 
  <span id="configtx"></span>
@@ -971,6 +980,7 @@ Organizations:
 
 ```
  <span id="crypto-config-org4"></span>
+[回到动态加入org](#dynamic_join)
 
  * `crypto-config-org4`: 这里设置了2个peer
 ```
@@ -1098,7 +1108,11 @@ lsof -i :10053
 lsof -i :7000
 
 ```
-### 静态加入
+
+<span id=static_join_peer></span>
+
+### 静态加入peer
+
 * 在当前目录下 新建 `org4-peer1.sh` [org4-peer1.sh 详细内容](#org4-peer1.sh)
 * 在config/peer/下 新建`org4-peer1`文件夹 进入再新建（最好是复制org3-peer1）的core.yaml文件 `core.yaml`[org4-peer1-core 详细内容](#org4-peer1-core)
 * 在chaincode/下 保证有`org4-peer0`文件夹 里面要有org4peer0的链码
@@ -1211,6 +1225,7 @@ declare -A CC_SRC_PATHS=(
 ```
 
 <span id="org4-peer1-core"></span>
+[回到静态加入peer](#static_join_peer)
 
 * 在config/peer/org4-peer1 下 `core.yaml`:添加内容 
 ```
