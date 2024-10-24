@@ -46,16 +46,24 @@ peer:
   Base Docker Label: org.hyperledger.fabric
   Docker Namespace: hyperledger
 ```
+修改 sudo vim /etc/hosts 改到对应的ip指向
 
-// sudo vim /etc/hosts
+```
+#test fabric
 127.0.0.1   orderer.example.com
+127.0.0.1   peer0.org1.example.com
+127.0.0.1   peer0.org2.example.com
+127.0.0.1   peer1.org2.example.com
+127.0.0.1   peer0.org3.example.com
+```
 
-//需要bash4.0之后的版本
+### 需要bash4.0之后的版本
 
 ## 节点情况
 `peer0.org1.example.com` `peer0.org2.example.com` `peer1.org2.example.com` `peer0.org3.example.com` `orderer.example.com`
 
-## 执行命令（一切顺利的话）
+### 执行命令（一切顺利的话）
+```
 * 执行`sh generate-config-file.sh`创建证书，创世块、通道文件和锚点文件等
 * 执行`sh orderer.sh`启动orderer节点
 * 执行`sh org1-peer0.sh`启动peer0.org1节点
@@ -71,8 +79,10 @@ peer:
 * 前往 `cd chaincode/org3-peer0/sampleChaincode` 执行`./sample` 启动peer0.org3的链码
 * 回到根目录
   可以查看peer.sh里的环境变量，进行引用
+
 ```
-# 设置 peer0.org1.example.com 的环境变量
+### 使用对应的peer环境变量， peer0.org1.example.com 的环境变量举例：
+```
     export FABRIC_CFG_PATH=$(pwd)/config
     export CORE_PEER_ID=peer0.org1.example.com
     export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
@@ -81,7 +91,8 @@ peer:
     export CORE_PEER_MSPCONFIGPATH=/Users/chenhuiyuan/Desktop/qiangweijuxin/fabric-test/config/crypto-config/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
     export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
  ```
-* 初始化链码
+
+### 初始化链码
 ```
 peer chaincode invoke \
   -o orderer.example.com:7050 \
@@ -99,8 +110,7 @@ peer chaincode invoke \
    -c '{"Args":[]}'
 ```
 
-
-* 设置a
+### 执行链码里的create函数
 ```
   peer chaincode invoke \
   -o orderer.example.com:7050 \
@@ -117,15 +127,16 @@ peer chaincode invoke \
   -c '{"function":"create","Args":["a","20"]}'
   ```
 
-* 执行`peer chaincode query -C mychannel -n sample -c '{"Args":["read","a"]}' `查询a
+### 执行查询a
+
 * 查询的时候也可以带上证书，这样org1peer0那边的链码也会进行查询，也可以多带几个证书
-```peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' /
+```
+peer chaincode query -C mychannel -n sample -c '{"Args":["read","a"]}' /
 --peerAddresses peer0.org1.example.com:7051 /
 --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
 ```
 
 ## 可能需要修改的地方
-
 
 * 保证端口 7050（orderer） 7051 7052（peer0.org1） 8050 8051（peer0.org2） 9050 9051（peer0.org3）6666(peer0.org1链码) 6667(peer0.org2链码) 6668(peer0.org3链码) 没有被占用
   否则需要对peer的端口进行修改
@@ -1733,6 +1744,12 @@ peer chaincode invoke \
 * `go build` 之后会生成一个sample文件
 * `./sample` 启动合约
 
+### 背书策略更改 configtx.yaml中Endorsement下的配置，只有配置对应的多个组织互通，链码可进行通信
 
 
+## 需要注意的地方：
+### 1. metadata.json每一个链的文件label需要唯一
+### 2. configtx.yaml配置引用时机 generate-config-file.sh 创建创世区块的时候和orderer.sh,启动orderer自动加载的
+### 3.create_channel1.sh 创建通道的时候需要加载一个默认的peer节点  export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
+### 4.peer node start和# 安装链码，peer lifecycle chaincode approveformyorg 链码批准 和peer lifecycle chaincode commit 提交 的时候自动找FABRIC_CFG_PATH地址里的core.yaml文件
 
