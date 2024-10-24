@@ -94,16 +94,38 @@ for peerName in "${install_peers[@]}"; do
 done
 
 
-orders_admin_peers=("Org1peer0" "Org2peer0" "Org3peer0")
+# 需要approveformyorg的组织
+orgs=("Org1peer0" "Org2peer0" "Org3peer0")
 
-for peerName in "${orders_admin_peers[@]}"; do
+for peerName in "${orgs[@]}"; do
     # 调用设置 peer 的函数
     ${PEER_SET_FUNCTIONS[$peerName]}
 
-    PACKAGE_ID=${PEER_PACKAGE_IDS[$peerName]}  # 使用对应的 PACKAGE_ID
-    CC_NAME=${CC_NAMES[$peerName]}  # 使用不同的链码名称
-    echo "##chaincode approveformyorg on $CORE_PEER_ID"
-    echo "##chaincode PACKAGE_ID is $PACKAGE_ID"
+    for install_peer in "${install_peers[@]}"; do
+        PACKAGE_ID=${PEER_PACKAGE_IDS[$install_peer]}  # 使用对应的 PACKAGE_ID
+        CC_NAME=${CC_NAMES[$install_peer]}  # 使用不同的链码名称
+        echo "##chaincode approveformyorg on $CORE_PEER_ID"
+        echo "##chaincode PACKAGE_ID is $PACKAGE_ID"
+
+        peer lifecycle chaincode approveformyorg \
+            -o orderer.example.com:7050 \
+            --ordererTLSHostnameOverride orderer.example.com \
+            --channelID "$CHANNEL_NAME" \
+            --name "$CC_NAME" \
+            --version "$CC_VERSION" \
+            --package-id "$PACKAGE_ID" \
+            --sequence "$CC_SEQUENCE" \
+            "$INIT_REQUIRED" \
+            --tls \
+            --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+
+        if [ $? -ne 0 ]; then
+            echo "Chaincode approve failed on $CORE_PEER_ID"
+            exit 1
+        fi
+
+    done
+
 
 #    peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name sampleOrg1 --version 1 --sequence 1 --output json
 #
@@ -118,23 +140,6 @@ for peerName in "${orders_admin_peers[@]}"; do
 #        --init-required \
 #        --tls \
 #        --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
-
-    peer lifecycle chaincode approveformyorg \
-        -o orderer.example.com:7050 \
-        --ordererTLSHostnameOverride orderer.example.com \
-        --channelID "$CHANNEL_NAME" \
-        --name "$CC_NAME" \
-        --version "$CC_VERSION" \
-        --package-id "$PACKAGE_ID" \
-        --sequence "$CC_SEQUENCE" \
-        "$INIT_REQUIRED" \
-        --tls \
-        --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
-
-    if [ $? -ne 0 ]; then
-        echo "Chaincode approve failed on $CORE_PEER_ID"
-        exit 1
-    fi
 
 #    echo "peerName: $peerName"
 #    echo "CORE_PEER_ID: $peerName"
@@ -197,7 +202,7 @@ done
 #  --tlsRootCertFiles "$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt"
 
 # 检查每个链码的提交准备状态并提交
-for peerName in "${orders_admin_peers[@]}"; do
+for peerName in "${install_peers[@]}"; do
 
     ${PEER_SET_FUNCTIONS[$peerName]}
     CC_NAME=${CC_NAMES[$peerName]}
