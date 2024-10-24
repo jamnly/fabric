@@ -72,7 +72,7 @@ Organizations:
                 Rule: "OR('Org1MSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org1MSP.member')"
+                Rule: "OR('Org1MSP.member', 'Org2MSP.member', 'Org3MSP.member')"
         
         AnchorPeers:
             - Host: peer0.org1.example.com
@@ -102,7 +102,7 @@ Organizations:
                 Rule: "OR('Org2MSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org2MSP.member')"
+                Rule: "OR('Org1MSP.member', 'Org2MSP.member', 'Org3MSP.member')"
         
         AnchorPeers:
             - Host: peer0.org2.example.com
@@ -132,7 +132,7 @@ Organizations:
                 Rule: "OR('Org3MSP.admin')"
             Endorsement:
                 Type: Signature
-                Rule: "OR('Org3MSP.member')"
+                Rule: "OR('Org1MSP.member', 'Org2MSP.member', 'Org3MSP.member')"
         
         AnchorPeers:
             - Host: peer0.org3.example.com

@@ -2,6 +2,7 @@
 
 # 设置 peer0.org1.example.com 的环境变量
 setPeerOrg1Peer0() {
+    echo "######setPeerOrg1Peer0 peer startup start######"
     export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
     export CORE_PEER_ID=peer0.org1.example.com
     export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
@@ -13,6 +14,7 @@ setPeerOrg1Peer0() {
 
 # 设置 peer0.org2.example.com 的环境变量
   setPeerOrg2Peer0() {
+    echo "######setPeerOrg2Peer0 peer startup start######"
     export FABRIC_CFG_PATH=$(pwd)/config/peer/org2-peer0/
     export CORE_PEER_ID=peer0.org2.example.com
     export CORE_PEER_ADDRESS=peer0.org2.example.com:8050
@@ -23,6 +25,7 @@ setPeerOrg1Peer0() {
 }
 # 设置 peer1.org2.example.com 的环境变量
 setPeerOrg2Peer1() {
+    echo "######setPeerOrg2Peer1 peer startup start######"
     export FABRIC_CFG_PATH=$(pwd)/config/peer/org2-peer1/
     export CORE_PEER_ID=peer1.org2.example.com
     export CORE_PEER_ADDRESS=peer1.org2.example.com:8052
@@ -33,6 +36,7 @@ setPeerOrg2Peer1() {
 }
 # 设置 peer0.org3.example.com 的环境变量
 setPeerOrg3Peer0() {
+    echo "######setPeerOrg3Peer0 peer startup start######"
     export FABRIC_CFG_PATH=$(pwd)/config/peer/org3-peer0/
     export CORE_PEER_ID=peer0.org3.example.com
     export CORE_PEER_ADDRESS=peer0.org3.example.com:9050
@@ -43,6 +47,7 @@ setPeerOrg3Peer0() {
 }
 # 设置 peer1.org3.example.com 的环境变量
 setPeerOrg3Peer1() {
+    echo "######setPeerOrg3Peer1 peer startup start######"
     export FABRIC_CFG_PATH=$(pwd)/config/peer/org3-peer1/
     export CORE_PEER_ID=peer1.org3.example.com
     export CORE_PEER_ADDRESS=peer1.org3.example.com:9052
@@ -53,6 +58,7 @@ setPeerOrg3Peer1() {
 }
 # 设置 peer0.org4.example.com 的环境变量
 setPeerOrg4Peer0() {
+    echo "######setPeerOrg4Peer0 peer startup start######"
     export FABRIC_CFG_PATH=$(pwd)/config/peer/org4-peer0/
     export CORE_PEER_ID=peer0.org4.example.com
     export CORE_PEER_ADDRESS=peer0.org4.example.com:10050

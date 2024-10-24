@@ -21,7 +21,7 @@ declare -A CC_NAMES=(
 # 定义组织及其对应的 Peer 数量
 declare -A ORG_PEER_COUNT=(
   ["Org1"]=1  # Org1 有 1 个 Peer
-  ["Org2"]=1  # Org2 有 2 个 Peer
+  ["Org2"]=2  # Org2 有 2 个 Peer
   ["Org3"]=1  # Org3 有 1 个 Peer
 )
 
@@ -55,7 +55,7 @@ declare -A PEER_PACKAGE_IDS=()  # 创建一个字典来存储每个 Peer 的 PAC
 for peerName in "${install_peers[@]}"; do
     # 调用设置 peer 的函数
     ${PEER_SET_FUNCTIONS[$peerName]}
-    
+    CC_NAME=${CC_NAMES[$peerName]}  # 使用不同的链码名称
     # 设置链码路径
     CC_SRC_PATH=${CC_SRC_PATHS[$peerName]}
 
@@ -80,7 +80,7 @@ for peerName in "${install_peers[@]}"; do
     echo "Log content after queryinstalled:"
     cat log.txt
 
-    PACKAGE_ID=$(grep "${CC_TGZ_NAME}:" log.txt | awk '{print $3}' | tr -d ',')
+    PACKAGE_ID=$(grep "${CC_NAME}:" log.txt | awk '{print $3}' | tr -d ',')
     echo "Package ID: $PACKAGE_ID"
 
     # 检查 PACKAGE_ID 是否成功获取
@@ -93,17 +93,32 @@ for peerName in "${install_peers[@]}"; do
     PEER_PACKAGE_IDS["$peerName"]="$PACKAGE_ID"
 done
 
-# 所有安装了链码的 peers 都批准链码
-approve_peers=("Org1peer0" "Org2peer0" "Org3peer0")
 
-for peerName in "${approve_peers[@]}"; do
+orders_admin_peers=("Org1peer0" "Org2peer0" "Org3peer0")
+
+for peerName in "${orders_admin_peers[@]}"; do
     # 调用设置 peer 的函数
     ${PEER_SET_FUNCTIONS[$peerName]}
 
     PACKAGE_ID=${PEER_PACKAGE_IDS[$peerName]}  # 使用对应的 PACKAGE_ID
     CC_NAME=${CC_NAMES[$peerName]}  # 使用不同的链码名称
     echo "##chaincode approveformyorg on $CORE_PEER_ID"
-     echo "##chaincode PACKAGE_ID is $PACKAGE_ID"
+    echo "##chaincode PACKAGE_ID is $PACKAGE_ID"
+
+#    peer lifecycle chaincode checkcommitreadiness --channelID mychannel --name sampleOrg1 --version 1 --sequence 1 --output json
+#
+#    peer lifecycle chaincode approveformyorg \
+#        -o orderer.example.com:7050 \
+#        --ordererTLSHostnameOverride orderer.example.com \
+#        --channelID mychannel \
+#        --name sampleOrg1 \
+#        --version 1 \
+#        --package-id 541650006fca0f91d04695fe29f8891e6f5bed60fa2d0bdda67c064a0d528e37 \
+#        --sequence 1 \
+#        --init-required \
+#        --tls \
+#        --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem"
+
     peer lifecycle chaincode approveformyorg \
         -o orderer.example.com:7050 \
         --ordererTLSHostnameOverride orderer.example.com \
@@ -120,6 +135,32 @@ for peerName in "${approve_peers[@]}"; do
         echo "Chaincode approve failed on $CORE_PEER_ID"
         exit 1
     fi
+
+#    echo "peerName: $peerName"
+#    echo "CORE_PEER_ID: $peerName"
+#
+#    echo "Checking commit readiness and committing $CC_NAME on channel $CHANNEL_NAME"
+#    peer lifecycle chaincode checkcommitreadiness --channelID "$CHANNEL_NAME" --name "$CC_NAME" --version "$CC_VERSION" --sequence "$CC_SEQUENCE" ${INIT_REQUIRED} --output json
+#    peer lifecycle chaincode commit \
+#        -o orderer.example.com:7050 \
+#        --channelID "$CHANNEL_NAME" \
+#        --name "$CC_NAME" \
+#        --version "$CC_VERSION" \
+#        --sequence "$CC_SEQUENCE" \
+#        --init-required \
+#        --tls true \
+#        --cafile "$(pwd)/config/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp/tlscacerts/tlsca.example.com-cert.pem" \
+#        --peerAddresses peer0.org1.example.com:7051 \
+#        --tlsRootCertFiles "$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt" \
+#        --peerAddresses peer0.org2.example.com:8050 \
+#        --tlsRootCertFiles "$(pwd)/config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt" \
+#        --peerAddresses peer0.org3.example.com:9050 \
+#        --tlsRootCertFiles "$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt"
+#    if [ $? -ne 0 ]; then
+#        echo "Chaincode commit failed for $CC_NAME on $CORE_PEER_ID"
+#        exit 1
+#    fi
+#    echo "$CC_NAME committed successfully."
 done
 
 #setPeerOrg1Peer0
@@ -156,10 +197,17 @@ done
 #  --tlsRootCertFiles "$(pwd)/config/crypto-config/peerOrganizations/org3.example.com/peers/peer0.org3.example.com/tls/ca.crt"
 
 # 检查每个链码的提交准备状态并提交
-for peerName in "${approve_peers[@]}"; do
+for peerName in "${orders_admin_peers[@]}"; do
+
     ${PEER_SET_FUNCTIONS[$peerName]}
     CC_NAME=${CC_NAMES[$peerName]}
+    echo "检查每个链码的提交准备状态并提交 $CC_NAME"
     echo "Checking commit readiness and committing $CC_NAME on channel $CHANNEL_NAME"
+
+    echo "peerName: $peerName"
+    echo "CORE_PEER_ID: $peerName"
+
+
     peer lifecycle chaincode checkcommitreadiness --channelID "$CHANNEL_NAME" --name "$CC_NAME" --version "$CC_VERSION" --sequence "$CC_SEQUENCE" ${INIT_REQUIRED} --output json
     peer lifecycle chaincode commit \
         -o orderer.example.com:7050 \

@@ -73,7 +73,7 @@ peer:
   可以查看peer.sh里的环境变量，进行引用
 ```
 # 设置 peer0.org1.example.com 的环境变量
-    export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0
+    export FABRIC_CFG_PATH=$(pwd)/config
     export CORE_PEER_ID=peer0.org1.example.com
     export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
     export CORE_PEER_TLS_ENABLED=true
@@ -720,7 +720,7 @@ metrics:
 
 * 在chaincode/org4-peer0/sampleChaincode/external 下 `metadata.json` 编写
 ```
-{"path":"","type":"external","label":"sample"}
+{"path":"","type":"external","label":"sample"} label是 链码名称
 
 ```
 
@@ -1708,6 +1708,11 @@ peer chaincode invoke \
 * 打包路径一般为 `chaincode/org4-peer0/sampleChaincode/external` 下有`connection.json`和`metadata.json`文件[connection.json 详细内容](#2) [metadata.json 详细内容](#3)
 * 打包链码
 * `tar cfz code.tar.gz connection.json ` `tar cfz sample.tgz metadata.json code.tar.gz`
+* mac下：
+* 
+* COPYFILE_DISABLE=1 tar cfz code.tar.gz connection.json
+* COPYFILE_DISABLE=1 tar cfz sample.tgz metadata.json code.tar.gz
+* 
 * 安装链码(需要先切换成需要安装链码的peer环境)
 * `peer lifecycle chaincode package`
 

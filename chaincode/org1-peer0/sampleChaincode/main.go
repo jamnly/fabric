@@ -130,7 +130,7 @@ func (sc *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response 
 // main function
 func main() {
 	fmt.Println("main start...")
-	ccid := "sample:541650006fca0f91d04695fe29f8891e6f5bed60fa2d0bdda67c064a0d528e37"
+	ccid := "sample:06b8b32c5fb8be0482c3ccb7b07d24aa8cb5b40d875eae4dd2c6793a5a2c908e"
 
 	server := &shim.ChaincodeServer{
 		CCID:    ccid,
