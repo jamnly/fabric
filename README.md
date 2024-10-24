@@ -4,7 +4,7 @@
 `sh`  
 `fabric 2.2.0`
 
-## 环境安装
+## 1.环境安装
 ### go 安装
 * `wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz `
 * 删除旧版本 `sudo rm -rf /usr/local/go`
@@ -59,10 +59,11 @@ peer:
 
 ### 需要bash4.0之后的版本
 
-## 节点情况
+### 节点情况
 `peer0.org1.example.com` `peer0.org2.example.com` `peer1.org2.example.com` `peer0.org3.example.com` `orderer.example.com`
 
-### 执行命令（一切顺利的话）
+## 2.部署：
+### 2.1执行命令（一切顺利的话）
 ```
 * 执行`sh generate-config-file.sh`创建证书，创世块、通道文件和锚点文件等
 * 执行`sh orderer.sh`启动orderer节点
@@ -81,7 +82,8 @@ peer:
   可以查看peer.sh里的环境变量，进行引用
 
 ```
-### 使用对应的peer环境变量， peer0.org1.example.com 的环境变量举例：
+
+### 2.2使用对应的peer环境变量， peer0.org1.example.com 的环境变量举例：
 ```
     export FABRIC_CFG_PATH=$(pwd)/config
     export CORE_PEER_ID=peer0.org1.example.com
@@ -92,7 +94,7 @@ peer:
     export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
  ```
 
-### 初始化链码
+### 2.3初始化链码
 ```
 peer chaincode invoke \
   -o orderer.example.com:7050 \
@@ -110,7 +112,7 @@ peer chaincode invoke \
    -c '{"Args":[]}'
 ```
 
-### 执行链码里的create函数
+### 2.4执行链码里的create函数
 ```
   peer chaincode invoke \
   -o orderer.example.com:7050 \
@@ -127,7 +129,7 @@ peer chaincode invoke \
   -c '{"function":"create","Args":["a","20"]}'
   ```
 
-### 执行查询a
+### 2.5执行查询a
 
 * 查询的时候也可以带上证书，这样org1peer0那边的链码也会进行查询，也可以多带几个证书
 ```
@@ -136,7 +138,7 @@ peer chaincode query -C mychannel -n sample -c '{"Args":["read","a"]}' /
 --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
 ```
 
-## 可能需要修改的地方
+## 3.可能需要修改的地方
 
 * 保证端口 7050（orderer） 7051 7052（peer0.org1） 8050 8051（peer0.org2） 9050 9051（peer0.org3）6666(peer0.org1链码) 6667(peer0.org2链码) 6668(peer0.org3链码) 没有被占用
   否则需要对peer的端口进行修改
@@ -161,6 +163,7 @@ lsof -i :9051
 * 关联文件：`chaincode/org1-peer0/sampleChaincode/external/connection.json` `chaincode/org1-peer0/sampleChaincode/main.go`
 * 请修改关于端口的地方
 * 并需要重新在/external下  `tar cfz code.tar.gz connection.json `  `tar cfz sample.tgz metadata.json code.tar.gz` 和在/sampleChaincode 下 go build `go build`
+
 ### 增加新的peer或org的情况
 * 必须到所有的`core.yaml` 里
 ```
@@ -169,8 +172,7 @@ gossip:
 ```
 * 加上新增加的peer！
 
-## 添加org
-
+## 4.添加org
 * 假设现在需要添加org4
 * 以下端口会占用10050 10051 7000！
 * 检查端口是否被占用
@@ -181,7 +183,7 @@ lsof -i :7000
 
 ```
 <span id=static_join></span>
-### 静态加入org
+### 4.1静态加入org
 * 在当前目录下 新建 `org4-peer0.sh` [org4-peer0.sh详细内容](#0)
 * 在config/peer/下 新建`org4-peer0`文件夹 进入再新建（最好是复制org3-peer0）的core.yaml文件 `core.yaml` [core.yaml详细内容](#1)
 * 在chaincode/下 新建`org4-peer0`文件夹 进入在新建（自定义的合约名称，可参考org3-peer0里的内容） `sampleChaincode`文件夹 进入新建`main.go`（链码） 再新建`external`文件夹（用于打包合约）进入创建`connection.json`和`metadata.json` [connection.json 详细内容](#2) [metadata.json 详细内容](#3)
@@ -758,7 +760,7 @@ Org3peer0: sample:8cc38988372d607b605d88d7c7cd521d252fe3eb086cb75c83a24e10c710b1
 Org4peer0: xxxx
 ```
 
-### 编写新的链码
+#### 编写新的链码
 **!!!!!!!!!!!!!!!!!!!!!**
 * 请复制上面的xxx！，这将在下面的内容里用到，并替换
 * ccid := "sample:xxx" //这里替换!!!
@@ -948,7 +950,7 @@ peer chaincode invoke \
 ```
 <span id=dynamic_join></span>
 
-### 动态加入org
+### 4.2动态加入org
 * 假设动态加入`org4peer0`
 * 即不执行`sh generate-config-file.sh`重新创建
 * 在当前目录下 新建 `org4-peer0.sh` [org4-peer0.sh详细内容](#0)
@@ -1113,7 +1115,7 @@ peer chaincode invoke \
 --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
 ```
 
-## 增加peer
+## 5.增加peer
 * 假设增加peer1.org4.example.com
 * 以下端口会占用10052 10053 7000！
 * 检查端口是否被占用
@@ -1127,7 +1129,7 @@ lsof -i :7000
 
 <span id=static_join_peer></span>
 
-### 静态加入peer
+### 5.1静态加入peer
 
 * 在当前目录下 新建 `org4-peer1.sh` [org4-peer1.sh 详细内容](#org4-peer1.sh)
 * 在config/peer/下 新建`org4-peer1`文件夹 进入再新建（最好是复制org3-peer1）的core.yaml文件 `core.yaml`[org4-peer1-core 详细内容](#org4-peer1-core)
@@ -1245,7 +1247,6 @@ declare -A CC_SRC_PATHS=(
 
 * 在config/peer/org4-peer1 下 `core.yaml`:添加内容
 ```
-
 peer:
 
     id: peer1.org4.example.com
@@ -1630,7 +1631,7 @@ peer chaincode invoke \
 ```
 * 查询b
 * `peer chaincode query -C mychannel -n sample -c '{"Args":["read","b"]}' `
-### 动态加入peer
+### 5.2动态加入peer
 * 假设动态加入 `org4peer1`
 * 即不执行`sh generate-config-file.sh`重新创建
   **前提得有org4-peer0已经加入了！**
@@ -1699,13 +1700,13 @@ peer chaincode invoke \
 --tlsRootCertFiles $(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt 
 ```
 
-## 改变通道名称
+## 6.改变通道名称
 * 默认是mychannel 想要更改的话，需要更改以下三个文件包括invoke之后的命令
 * `create_channel1.sh` `join_channel.sh` `approveformyorg_chaincode.sh` 中的 CHANNEL_NAME
 
 <span id="chaincode"> </span>
 
-## 打包 安装 build 链码
+## 7.打包 安装 build 链码
 
     export FABRIC_CFG_PATH=/Users/chenhuiyuan/GolandProjects/fabric-master/config/peer/org1-peer0
     export CORE_PEER_ID=peer0.org1.example.com
@@ -1747,9 +1748,9 @@ peer chaincode invoke \
 ### 背书策略更改 configtx.yaml中Endorsement下的配置，只有配置对应的多个组织互通，链码可进行通信
 
 
-## 需要注意的地方：
-### 1. metadata.json每一个链的文件label需要唯一
-### 2. configtx.yaml配置引用时机 generate-config-file.sh 创建创世区块的时候和orderer.sh,启动orderer自动加载的
-### 3.create_channel1.sh 创建通道的时候需要加载一个默认的peer节点  export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
-### 4.peer node start和# 安装链码，peer lifecycle chaincode approveformyorg 链码批准 和peer lifecycle chaincode commit 提交 的时候自动找FABRIC_CFG_PATH地址里的core.yaml文件
+## 8.需要注意的地方：
+### 8.1 metadata.json每一个链的文件label需要唯一
+### 8.2 configtx.yaml配置引用时机 generate-config-file.sh 创建创世区块的时候和orderer.sh,启动orderer自动加载的
+### 8.3 create_channel1.sh 创建通道的时候需要加载一个默认的peer节点  export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
+### 8.4 peer node start和# 安装链码，peer lifecycle chaincode approveformyorg 链码批准 和peer lifecycle chaincode commit 提交 的时候自动找FABRIC_CFG_PATH地址里的core.yaml文件
 
