@@ -24,7 +24,7 @@ export PATH=$PATH:$GOROOT/bin
 * `go env -w GOPROXY=https://goproxy.cn,direct`
 ### fabric安装
 * 浏览器打开下载压缩包 https://github.com/hyperledger/fabric/releases/download/v2.2.15/hyperledger-fabric-linux-amd64-2.2.15.tar.gz
-* 浏览器打开下载压缩包 https://github.com/hyperledger/fabric-ca/releases/download/v1.5.9/hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz
+* 浏览器打开下载压缩包 [https://github.com/hyperledger/fabric-ca/releases/download/v1.5.9/hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz]()
 * 解压到自己想要的位置 `tar -xzvf hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz -C /home/test/fabric/`
 * 同上`tar -xzvf hyperledger-fabric-linux-amd64-2.2.15.tar.gz -C /home/test/fabric/`
 * `sudo gedit  ~/.bashrc`
@@ -1754,3 +1754,9 @@ peer chaincode invoke \
 ### 8.3 create_channel1.sh 创建通道的时候需要加载一个默认的peer节点  export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
 ### 8.4 peer node start和# 安装链码，peer lifecycle chaincode approveformyorg 链码批准 和peer lifecycle chaincode commit 提交 的时候自动找FABRIC_CFG_PATH地址里的core.yaml文件
 
+## 9.无网络下go build方式
+使用Go Modules的vendor模式： Go Modules支持vendor模式，你可以在有网络的环境中运行go mod vendor来创建一个包含所有依赖的vendor目录。然后，你可以将整个项目目录（包括vendor目录）复制到没有网络的环境中。在没有网络的环境中编译时，使用go build -mod=vendor来指定使用vendor目录中的依赖。
+```
+go mod vendor
+go build -mod=vendor
+```
