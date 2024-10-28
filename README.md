@@ -67,7 +67,7 @@ peer:
 ```
 * 执行`sh generate-config-file.sh`创建证书，创世块、通道文件和锚点文件等
 * 执行`sh orderer.sh`启动orderer节点
-* 执行`sh org1-peer0.sh`启动peer0.org1节点
+* 执行`sh org1-peer0.sh`启动peer0.org1节点 
 * 执行`sh org2-peer0.sh`启动peer0.org2节点
 * 执行`sh org2-peer1.sh`启动peer1.org2节点
 * 执行`sh org3-peer0.sh`启动peer0.org3节点
