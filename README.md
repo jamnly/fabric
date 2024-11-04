@@ -1706,7 +1706,712 @@ peer chaincode invoke \
 * `go mod tidy`
 * `go build` 之后会生成一个sample文件
 * `./sample` 启动合约
+# 非容器化部署 hyperledger explorer
+* 官方地址: https://github.com/hyperledger-labs/blockchain-explorer/tree/main
+* 安装版本: 2.0.0 支持的fabric版本: 2.2~2.5  支持NodeJS:^12.13.1,^14.13.1,^16.14.1  
+  <br>
+* 先决条件:
+* Nodejs:^12.13.1,^14.13.1,^16.14.1
+* PostgreSQL 9.5 或更高版本
+* jq
+## 克隆 GIT 存储库
+* `git clone https://github.com/hyperledger/blockchain-explorer.git`
+* `cd blockchain-explorer`
+## 安装PostgreSQL
+* 以下为ubuntu的安装方法，参考:https://blog.csdn.net/qq_36973384/article/details/142363304
+* 执行更新命令 `sudo apt update`
+* postgresql安装命令 `sudo apt install postgresql`
+* 修改postgresql密码命令 `sudo passwd postgres`
+## 数据库设置
+* `cd blockchain-explorer/app`
+* 修改 app/explorerconfig.json 以更新 PostgreSQL 数据库设置。
+```
+"postgreSQL": {
+    "host": "127.0.0.1",
+    "port": "5432",
+    "database": "fabricexplorer",
+    "username": "hppoc",
+    "passwd": "password"
+}
+```
+* 配置数据库设置的另一种替代方法是使用环境变量
+```
+export DATABASE_HOST=127.0.0.1
+export DATABASE_PORT=5432
+export DATABASE_DATABASE=fabricexplorer
+export DATABASE_USERNAME=hppoc
+export DATABASE_PASSWD=pass12345
+```
+* 每次 git pull 后都要重复（在某些情况下，你可能需要向 db/ 目录应用权限，从 blockchain-explorer/app/persistence/fabric/postgreSQL 运行：chmod -R 775 db/
+## 更新配置
+* 修改 `app/platform/fabric/config.json`
+  * 假设组织有3个
+```
+{
+	"network-configs": {
+		"org1-network": {
+			"name": "org1-network",
+			"profile": "./connection-profile/org1-network.json",
+			"bootMode": "ALL",
+			"noOfBlocks": 0
+		},
+		"org2-network": {
+			"name": "org2-network",
+			"profile": "./connection-profile/org2-network.json",
+			"bootMode": "ALL",
+			"noOfBlocks": 0
+		},
+		"org3-network": {
+			"name": "org3-network",
+			"profile": "./connection-profile/org3-network.json",
+			"bootMode": "ALL",
+			"noOfBlocks": 0
+		}
+	},
+	"license": "Apache-2.0"
+}
+```
+  * `test-network` 是连接配置文件的名称，可以更改为任何名称
+  * `name`是您想要为 Fabric 网络指定的名称。您可以更改键名称的唯一值
+  * `profile`是 Connection 配置文件的位置。您可以更改密钥配置文件的唯一值
+* 在 JSON 文件中 `app/platform/fabric/connection-profile/test-network.json` 修改连接配置文件 ：
+  * 将`test-network.json`复制三份分别取名为`org1-network.json`,`org2-network.json`,`org3-network.json`
+  * 假设org2有peer0和peer1，以下为`org2-network.json`的配置:
+```
+{
+	"name": "org2-network",
+	"version": "1.0.0",
+	"license": "Apache-2.0",
+	"client": {
+		"tlsEnable": true,
+		"adminCredential": {
+			"id": "exploreradmin",
+			"password": "exploreradminpw"
+		},
+		"enableAuthentication": true,
+		"organization": "Org2MSP",
+		"connection": {
+			"timeout": {
+				"peer": {
+					"endorser": "300"
+				},
+				"orderer": "300"
+			}
+		}
+	},
+	"channels": {
+		"mychannel": {
+			"peers": {
+				"peer0.org2.example.com": {},
+				"peer1.org2.example.com": {}
+			},
+			"connection": {
+				"timeout": {
+					"peer": {
+						"endorser": "6000",
+						"eventHub": "6000",
+						"eventReg": "6000"
+					}
+				}
+			}
+		}
+	},
+	"organizations": {
+		"Org2MSP": {
+			"mspid": "Org2MSP",
+			"adminPrivateKey": {
+				"path": "/home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/keystore/priv_sk"
+			},
+			"peers": ["peer0.org2.example.com"],
+			"signedCert": {
+				"path": "/home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org2.example.com/users/User1@org2.example.com/msp/signcerts/User1@org2.example.com-cert.pem"
+			}
+		}
+	},
+	"peers": {
+		"peer0.org2.example.com": {
+			"tlsCACerts": {
+				"path": "/home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer0.org2.example.com:8050",
+			"grpcOptions": {
+				"ssl-target-name-override": "peer0.org2.example.com"
+			}
+		},
+		"peer1.org2.example.com": {
+			"tlsCACerts": {
+				"path": "/home/jamnly/fabric-2.2/fabric-native-network/config/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer1.org2.example.com:8052",
+			"grpcOptions": {
+				"ssl-target-name-override": "peer1.org2.example.com"
+			}
+		}
+		
+	}
+}
+```
+* 需要对路径和端口进行修改
+* `exploreradmin` 和 `exploreradminpw` 是 Explorer 用户登录 dashboard 的凭证
+* `enableAuthentication` 是使用登录页面启用身份验证的标志。设置为 false 将跳过身份验证。
+* 更多配置内容见: https://github.com/hyperledger-labs/blockchain-explorer/blob/main/README-CONFIG.md
+## 创建数据库
+* **Ubuntu**
+
+    ```
+    $ cd blockchain-explorer/app/persistence/fabric/postgreSQL/db
+    $ sudo -u postgres ./createdb.sh
+    ```
+
+* **MacOS**
+
+    ```
+    $ cd blockchain-explorer/app/persistence/fabric/postgreSQL/db
+    $ ./createdb.sh
+    $ createdb `whoami`
+    ```
+* 连接到 PostgreSQL 数据库并运行 DB status 命令。要将设置从 `app/explorerconfig.json` 导出到环境，请运行 `source app/exportConfig.sh`;这将设置 `$DATABASE_DATABASE` 和相关 envvars。
+* **Ubuntu**
+
+    ```shell
+    sudo -u postgres psql -c '\l'
+    sudo -u postgres psql $DATABASE_DATABASE -c '\d'
+    ```
+
+* **MacOS**
+
+    ```shell
+    psql -c '\l'
+    psql $DATABASE_DATABASE -c '\d'
+    ```
+
+* 预期输出
+```shell
+$ sudo -u postgres psql -c '\l'
+                                     List of databases
+      Name      |        Owner        | Encoding | Collate |  Ctype  |   Access privileges
+----------------+---------------------+----------+---------+---------+-----------------------
+ fabricexplorer | $DATABASE_USERNAME  | UTF8     | C.UTF-8 | C.UTF-8 |
+ postgres       | postgres            | UTF8     | C.UTF-8 | C.UTF-8 |
+ template0      | postgres            | UTF8     | C.UTF-8 | C.UTF-8 | =c/postgres          +
+                |                     |          |         |         | postgres=CTc/postgres
+ template1      | postgres            | UTF8     | C.UTF-8 | C.UTF-8 | =c/postgres          +
+                |                     |          |         |         | postgres=CTc/postgres
+(4 rows)
+
+$ sudo -u postgres psql $DATABASE_DATABASE -c '\d'
+                   List of relations
+ Schema |           Name            |   Type   |       Owner
+--------+---------------------------+----------+-------------------
+ public | blocks                    | table    | $DATABASE_USERNAME
+ public | blocks_id_seq             | sequence | $DATABASE_USERNAME
+ public | chaincodes                | table    | $DATABASE_USERNAME
+ public | chaincodes_id_seq         | sequence | $DATABASE_USERNAME
+ public | channel                   | table    | $DATABASE_USERNAME
+ public | channel_id_seq            | sequence | $DATABASE_USERNAME
+ public | orderer                   | table    | $DATABASE_USERNAME
+ public | orderer_id_seq            | sequence | $DATABASE_USERNAME
+ public | peer                      | table    | $DATABASE_USERNAME
+ public | peer_id_seq               | sequence | $DATABASE_USERNAME
+ public | peer_ref_chaincode        | table    | $DATABASE_USERNAME
+ public | peer_ref_chaincode_id_seq | sequence | $DATABASE_USERNAME
+ public | peer_ref_channel          | table    | $DATABASE_USERNAME
+ public | peer_ref_channel_id_seq   | sequence | $DATABASE_USERNAME
+ public | transactions              | table    | $DATABASE_USERNAME
+ public | transactions_id_seq       | sequence | $DATABASE_USERNAME
+ public | write_lock                | table    | $DATABASE_USERNAME
+ public | write_lock_write_lock_seq | sequence | $DATABASE_USERNAME
+(18 rows)
+
+```
+* （在 MacOS 上，期望看到您的“whoami”而不是 postgres。带有 $DATABASE_USERNAME 的条目将具有该参数的 valuei，无论是设置为环境变量还是 JSON keyval;它不会显示 Literal String。
+### ubuntu手动创建方法
+* 当以上方法无法创建时 （排除node版本的问题）
+* 可以试试以下方法:
+* 进到执行脚本文件 `blockchain-explorer/app/persistence/fabric/postgreSQL/db`
+* 通过修改脚本文件来创建数据库,以下是重写的脚本文件，命名为1.sh:
+```
+#!/bin/bash
+
+# SPDX-License-Identifier: Apache-2.0
+
+echo "Setting ENV variables directly..."
+export USER="hppoc"
+export DATABASE="fabricexplorer"
+export PASSWD='password'
+
+echo "USER=${USER}"
+echo "DATABASE=${DATABASE}"
+echo "PASSWD=${PASSWD}"
 
 
+# 生成替换后的临时 SQL 脚本
+TEMP_SQL_FILE="./temp_script.sql"
+sed "s/:user/${USER}/g; s/:passwd/'${PASSWD}'/g; s/:dbname/${DATABASE}/g" ./explorerpg.sql > ${TEMP_SQL_FILE}
 
 
+echo "Executing SQL scripts, OS="$OSTYPE
+
+# support for OS
+case $OSTYPE in
+darwin*) 
+    psql postgres -f ${TEMP_SQL_FILE} ;;
+linux*)
+    if [ $(id -un) = 'postgres' ]; then
+        PSQL="psql"
+    else
+        PSQL="sudo -u postgres psql"
+    fi
+    ${PSQL} -f ${TEMP_SQL_FILE} ;;
+esac
+
+# 清理临时文件
+rm ${TEMP_SQL_FILE}
+```
+* 需要根据之前设置的数据库配置文件来更新环境配置
+* 接下来要获取postgres的路径
+* 进入postgres用户 `sudo -u postgres -i`
+* 获取当前路径 `pwd`
+* 假设获取的路径是 `/var/lib/postgresql` 退出 `exit`
+* 复制脚本和sql文件到postgres用户 `sudo cp ./ /var/lib/postgresql/`
+* 再进入postgres用户执行脚本 `sudo -u postgres -i` `./1.sh`
+## 构建 Hyperledger Explorer
+  **重要提示：在每次修改配置之后重复以下步骤**
+* 从存储库的根目录：
+  * `./main.sh clean`
+    * 清理 /node_modules、client/node_modules client/build、client/coverage、app/test/node_modules 目录
+  * `./main.sh install`
+    * 安装、运行测试和构建项目
+
+或
+```
+ cd blockchain-explorer
+ npm install
+ cd client/
+ npm install
+ npm run build
+```
+## 运行hyperledger explorer
+* 启动fabric网络
+* 在根目录 ` cd blockchain-explorer`
+* 执行`./start.sh`
+* 日志会存储在`logs/console/`里
+* 网页为`http://localhost:8080/#/`
+## 其他
+* 报错[ERROR] Sync - Error : [ 'Channel name [%s] already exist in DB , Kindly re-run the DB scripts to proceed',
+'*****' ]
+Error : [ 'Explorer is closing due to channel name [%s] is already exist in DB'...]
+  * 进入用户 `su - postgres`
+  * 进入 postgresql `psql`
+  * 查看数据库列表 `\l`
+  * 进入fabricexplorer数据库里面 `\c fabricexplorer `
+  * 表示展示数据库中的表信息 `\d`
+  * 查询channel表信息 ` select * from channel;`
+  * 删除报错的channel `delete from channel where name = 'mychannel';`
+* 报错[2024-11-03T15:34:22.791] [ERROR] FabricGateway - Failed to create wallet, please check the configuration, and valid file paths: {}
+[2024-11-03T15:34:22.791] [ERROR] FabricClient - ExplorerError {
+  name: 'ExplorerError',
+  message: '[\n' +
+    "  'Failed to create wallet, please check the configuration, and valid file paths'\n" +
+    ']'
+}
+[2024-11-03T15:34:22.792] [ERROR] main - <<<<<<<<<<<<<<<<<<<<<<<<<< Explorer Error >>>>>>>>>>>>>>>>>>>>>
+[2024-11-03T15:34:22.792] [ERROR] main - Error :  [ 'Invalid platform configuration, Please check the log' ]
+  * 可能需要手动创建文件夹，在根目录上 ` -p wallet/org1-network `
+  * 这种一般是配置连接文件的问题，仔细检查MSP的名称，还有如果一个组织下有多个peer，需要将组织下的所有peer都加入
+# 非容器化部署 couchdb
+* 官方文档: https://docs.couchdb.org/en/stable/install/unix.html#installation-using-the-apache-couchdb-convenience-binary-packages
+## ubuntu 安装
+* 启用 Apache CouchDB 软件包存储库
+```
+sudo apt update && sudo apt install -y curl apt-transport-https gnupg
+curl https://couchdb.apache.org/repo/keys.asc | gpg --dearmor | sudo tee /usr/share/keyrings/couchdb-archive-keyring.gpg >/dev/null 2>&1
+source /etc/os-release
+echo "deb [signed-by=/usr/share/keyrings/couchdb-archive-keyring.gpg] https://apache.jfrog.io/artifactory/couchdb-deb/ ${VERSION_CODENAME} main" \
+    | sudo tee /etc/apt/sources.list.d/couchdb.list >/dev/null
+```
+*  安装 Apache CouchDB 软件包
+```
+sudo apt update
+sudo apt install -y couchdb
+```
+* 寻找couchdb的执行脚本，默认应该是在`/opt/couchdb/bin`里 有couchdb
+* 配置环境 `sudo gedit ~/.bashrc` 在最后一行加上:
+```
+export COUCHDB_HOME=/opt/couchdb
+export PATH=$COUCHDB_HOME/bin:$PATH
+```
+* 加载配置 `source ~/.bashrc`
+* 修改`/opt/couchdb/bin/couchdb` 脚本
+```
+#!/bin/sh
+
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+canonical_readlink ()
+{
+  FILE=$(dirname "$1")/$(basename "$1")
+  if [ -h "$FILE" ]; then
+    cd $(dirname "$1")
+    canonical_readlink $(readlink "$FILE")
+  else
+    cd "${1%/*}" && pwd -P
+  fi
+}
+
+COUCHDB_BIN_DIR=$(canonical_readlink "$0")
+ERTS_BIN_DIR=$COUCHDB_BIN_DIR/../
+cd "$COUCHDB_BIN_DIR/../"
+
+export ROOTDIR=${ERTS_BIN_DIR%/*}
+
+START_ERL=`cat "$ROOTDIR/releases/start_erl.data"`
+ERTS_VSN=${START_ERL% *}
+
+export BINDIR="$ROOTDIR/erts-$ERTS_VSN/bin"
+export EMU=beam
+export PROGNAME=`echo $0 | sed 's/.*\///'`
+
+export COUCHDB_QUERY_SERVER_JAVASCRIPT="${COUCHDB_QUERY_SERVER_JAVASCRIPT:-./bin/couchjs ./share/server/main.js}"
+export COUCHDB_QUERY_SERVER_COFFEESCRIPT="${COUCHDB_QUERY_SERVER_COFFEESCRIPT:-./bin/couchjs ./share/server/main-coffee.js}"
+DEFAULT_FAUXTON_ROOT=./share/www
+export COUCHDB_FAUXTON_DOCROOT="${COUCHDB_FAUXTON_DOCROOT:-${DEFAULT_FAUXTON_ROOT}}"
+
+# 读取命令行参数
+while getopts "c:f:" opt; do
+  case $opt in
+    c)
+      COUCHDB_INI_FILE="$OPTARG"
+      ;;
+    f)
+      ARGS_FILE="$OPTARG"
+      ;;
+    *)
+      echo "用法: $0 -c <ini文件> -f <vm.args文件>"
+      exit 1
+      ;;
+  esac
+done
+
+# 确保参数存在
+if [ -z "$COUCHDB_INI_FILE" ] || [ -z "$ARGS_FILE" ]; then
+  echo "请提供 -c 和 -f 参数"
+  exit 1
+fi
+
+INI_ARGS="-couch_ini $COUCHDB_INI_FILE"
+SYSCONFIG_FILE="${COUCHDB_SYSCONFIG_FILE:-$ROOTDIR/releases/sys.config}"
+
+exec "$BINDIR/erlexec" -boot "$ROOTDIR/releases/couchdb" \
+     -args_file "$ARGS_FILE" \
+     $INI_ARGS \
+     -config "$SYSCONFIG_FILE" "$@"
+
+```
+## 配置couchdb
+* 在fabric网络配置下，新建一个文件夹命名为`couchdb-config`
+* 进入`couchdb-config` 再创建不同peer需要的couchdb配置文件夹，假设现在有三个组织，在第二个组织下有两个peer，那么就是创建`org1-peer0-data` `org1-peer0-local.ini` `org2-peer0-data` `org2-peer0-local.ini` `org2-peer1-data` `org2-peer1-local.ini` `org3-peer0-data` `org3-peer0-local.ini`
+* 其中`org-peer0-data` 这种是文件夹，进入文件夹后每一个再创建一个`mem3-data`文件夹与`vm.args`文件
+* `org1-peer0-local.ini`配置如下:
+* 不同的peer对应不同的ini配置，需修改node下的name,couchdb下的路径，name，uuid删除或注释，mem3下的路径，chttpd_auth下的删除或注释，chttpd下的端口
+```
+; CouchDB Configuration Settings
+[node]
+name = couchdb-org1-peer0@127.0.0.1
+[couchdb]
+max_document_size = 4294967296 ; 最大文档大小（字节）
+os_process_timeout = 5000        ; OS 进程超时设置（毫秒）
+;uuid = 2b799f2bda8eb634e8edaa75cf5799a2 ;注释或删除掉，让他重新生成
+name = org1_peer0_db             ; 数据库名称
+database_dir = /home/jamnly/fabric-2.2/fabric-native-network/couchdb-config/org1-peer0-data
+view_index_dir = /home/jamnly/fabric-2.2/fabric-native-network/couchdb-config/org1-peer0-data
+[admins]
+admin = 123456 ;在安装couchdb时填写的密码
+[cluster]
+n = 1
+[log]
+;writer = file ;选择日志为文件的形式
+writer = stderr ;日志为启动时的命令行形式
+file = /var/log/couchdb/couchdb0.log ;日志文件路径
+[mem3]
+db = /home/jamnly/fabric-2.2/fabric-native-network/couchdb-config/org1-peer0-data/mem3-data
+
+; Optional SSL Configuration
+
+[chttpd_auth]
+;secret = 0069cbe6d88bc5f00ab478ec7db05647  ;注释或删除掉，让他重新生成
+
+[chttpd]
+;HTTP 服务器选项
+bind_address = 0.0.0.0  ;定义群集端口可用的 IP 地址
+port = 5984 ;端口
+[couch_httpd_auth]
+; WARNING! This only affects the node-local port (5986 by default).
+; You probably want the settings under [chttpd].
+authentication_db = _users
+[indexers]
+couch_mrview = true
+[feature_flags]
+; This enables any database to be created as a partitioned databases (except system db's).
+; Setting this to false will stop the creation of partitioned databases.
+; partitioned||allowed* = true will scope the creation of partitioned databases
+; to databases with 'allowed' prefix.
+partitioned||* = true
+```
+
+* 请先参考`/opt/couchdb/etc/vm.args`的内容，更换以下的setcookie
+* 以下就添加了
+```
+-kernel inet_dist_listen_min 9100
+-kernel inet_dist_listen_max 9200
+```
+* 和对`-name  couchdb0@127.0.0.1`的修改，需要保证不同的peer,-name都需要不同
+* `vm.args`配置如下:
+```
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+# Each node in the system must have a unique name. These are specified through
+# the Erlang -name flag, which takes the form:
+#
+#    -name nodename@<FQDN>
+#
+# or
+#
+#    -name nodename@<IP-ADDRESS>
+#
+# CouchDB recommends the following values for this flag:
+#
+# 1. If this is a single node, not in a cluster, use:
+#    -name couchdb@127.0.0.1
+#
+# 2. If DNS is configured for this host, use the FQDN, such as:
+#    -name couchdb@my.host.domain.com
+#
+# 3. If DNS isn't configured for this host, use IP addresses only, such as:
+#    -name couchdb@192.168.0.1
+#
+# Do not rely on tricks with /etc/hosts or libresolv to handle anything
+# other than the above 3 approaches correctly. They will not work reliably.
+#
+# Multiple CouchDBs running on the same machine can use couchdb1@, couchdb2@,
+# etc.
+-name couchdb0@127.0.0.1
+
+# All nodes must share the same magic cookie for distributed Erlang to work.
+# Uncomment the following line and append a securely generated random value.
+-setcookie 'jamnly'
+
+# Which interfaces should the node listen on?
+-kernel inet_dist_use_interface '{0,0,0,0}'
+-kernel inet_dist_listen_min 9100
+-kernel inet_dist_listen_max 9200
+
+# Tell kernel and SASL not to log anything
+-kernel error_logger silent
+-sasl sasl_error_logger false
+
+# This will toggle to true in Erlang 25+. However since we don't use global
+# any longer, and have our own auto-connection module, we can keep the
+# existing global behavior to avoid surprises. See
+# https://github.com/erlang/otp/issues/6470#issuecomment-1337421210 for more
+# information about possible increased coordination and messages being sent on
+# disconnections when this setting is enabled.
+#
+-kernel prevent_overlapping_partitions false
+
+# Increase the pool of dirty IO schedulers from 10 to 16
+# Dirty IO schedulers are used for file IO.
++SDio 16
+
+# Increase distribution buffer size from default of 1MB to 32MB. The default is
+# usually a bit low on busy clusters. Has no effect for single-node setups.
+# The unit is in kilobytes.
++zdbbl 32768
+
+# When running on Docker, Kubernetes or an OS using CFS (Completely Fair
+# Scheduler) with CPU quota limits set, disable busy waiting for schedulers to
+# avoid busy waiting consuming too much of Erlang VM's CPU time-slice shares.
+#+sbwt none
+#+sbwtdcpu none
+#+sbwtdio none
+
+# Comment this line out to enable the interactive Erlang shell on startup
++Bd -noinput
+
+# Set maximum SSL session lifetime to reap terminated replication readers
+-ssl session_lifetime 300
+
+## TLS Distribution
+## Use TLS for connections between Erlang cluster members.
+## http://erlang.org/doc/apps/ssl/ssl_distribution.html
+##
+## Generate Cert(PEM) File
+## This is just an example command to generate a certfile (PEM).
+## This is not an endorsement of specific expiration limits, key sizes, or algorithms.
+##    $ openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -keyout key.pem -out cert.pem
+##    $ cat key.pem cert.pem > dev/erlserver.pem && rm key.pem cert.pem
+##
+## Generate a Config File (couch_ssl_dist.conf)
+##    [{server,
+##      [{certfile, "</path/to/erlserver.pem>"},
+##       {secure_renegotiate, true}]},
+##     {client,
+##      [{secure_renegotiate, true}]}].
+##
+## CouchDB recommends the following values for no_tls flag:
+## 1. Use TCP only, set to true, such as:
+##      -couch_dist no_tls true
+## 2. Use TLS only, set to false, such as:
+##      -couch_dist no_tls false
+## 3. Specify which node to use TCP, such as:
+##      -couch_dist no_tls \"*@127.0.0.1\"
+##
+## To ensure search works, make sure to set 'no_tls' option for the clouseau node.
+## By default that would be "clouseau@127.0.0.1".
+## Don't forget to override the paths to point to your certificate(s) and key(s)!
+##
+#-proto_dist couch
+#-couch_dist no_tls '"clouseau@127.0.0.1"'
+#-ssl_dist_optfile <path/to/couch_ssl_dist.conf>
+
+# Enable FIPS mode
+#   https://www.erlang.org/doc/apps/crypto/fips.html
+#   Ensure that:
+#    - Erlang is built with --enable-fips configuration option
+#    - Crypto library (e.g. OpenSSL) supports this mode
+#
+# When the mode is successfully enabled "Welcome" message should show `fips`
+# in the features list.
+#
+#-crypto fips_mode true
+
+# OS Mon Settings
+
+# only start disksup
+-os_mon start_cpu_sup false
+-os_mon start_memsup false
+
+# Check disk space every 5 minutes
+-os_mon disk_space_check_interval 5
+
+# don't let disksup send alerts
+-os_mon disk_almost_full_threshold 1.0
+```
+* 在`couchdb-config`外设置内部所有文件的权限为777
+* `sudo chmod -R 777 ./couchdb-config`
+* 因为couchdb执行的时候会使用couchdb的用户组，我们创建的文件都是所属我们的用户组，要将其他组的权限打开，能访问和修改到我们用户组所创建的文件。
+### 可能会碰到的问题
+* 若遇到权限不足的问题，可将权限不够的路径设置权限
+  * 如
+  * `sudo chmod -R 777 /var/lib/couchdb`
+  * `sudo chown -R couchdb:couchdb /var/lib/couchdb`
+* Protocol 'inet_tcp': the name couchdb@127.0.0.1 seems to be in use by another Erlang node
+  * 查找couchdb进程`ps aux | grep couchdb`
+  * 杀死最长的那个进程 `sudo kill -9 1234`
+  * 确保你的vm.args里的-name是唯一的！！！
+## 配置peer
+* 打开peer的`core.yaml`
+* 找到`stateDatabase:`，修改如下:
+```
+    stateDatabase: CouchDB
+    totalQueryLimit: 100000
+    couchDBConfig:
+       couchDBAddress: 127.0.0.1:5984 #修改对应的端口
+       username: admin
+       password: 123456 #修改自己设置的密码
+       maxRetries: 3
+       maxRetriesOnStartup: 10
+       requestTimeout: 35s
+       internalQueryLimit: 1000
+       maxBatchUpdateSize: 1000
+       warmIndexesAfterNBlocks: 1
+       createGlobalChangesDB: true
+       cacheSize: 64
+```
+* 还可以将`org1-peer0.sh`修改成这样
+```
+echo "######org1 peer startup start######"
+echo "current path: $(pwd)"
+echo "remove data/peer"
+rm -rf ./data/peer/org1-peer0
+
+
+# 默认不使用 CouchDB
+export CORE_LEDGER_STATE_STATEDATABASE=leveldb
+
+# 解析参数
+while getopts ":c" opt; do
+  case ${opt} in
+    c )
+      echo "使用 CouchDB 数据库"
+      export CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      ;;
+    \? )
+      echo "无效的选项: $OPTARG" 1>&2
+      ;;
+  esac
+done
+
+export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0
+#export FABRIC_LOGGING_SPEC=INFO
+export FABRIC_LOGGING_SPEC=DEBUG
+export CORE_PEER_TLS_ENABLED=true
+export CORE_PEER_PROFILE_ENABLED=true
+
+# Peer specific variables
+export CORE_PEER_ID=peer0.org1.example.com
+export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+export CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+export CORE_PEER_CHAINCODEADDRESS=peer0.org1.example:7052
+export CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+export CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
+export CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+export CORE_OPERATIONS_LISTENADDRESS=peer0.org1.example.com:7543
+export CORE_PEER_LOCALMSPID=Org1MSP
+
+
+# Peer certificates and keys
+export CORE_PEER_TLS_CERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.crt
+export CORE_PEER_TLS_KEY_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/server.key
+export CORE_PEER_TLS_ROOTCERT_FILE=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp/tlscacerts/tlsca.org1.example.com-cert.pem
+export CORE_PEER_TLS_CLIENTROOTCAS_FILES=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls/ca.crt
+export CORE_PEER_MSPCONFIGPATH=$(pwd)/config/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp
+
+# Ledger state database path
+export CORE_PEER_FILESYSTEMPATH=$(pwd)/data/peer/org1-peer0
+
+# Start the peer node
+peer node start
+
+```
+* 这样 `sh org1-peer0.sh`是不启动db
+* `sh org1-peer0.sh -c`是启动db
+## 启动couchdb
+* `couchdb -c /home/jamnly/fabric-2.2/fabric-native-network/couchdb-config/org1-peer0-local.ini -f /home/jamnly/fabric-2.2/fabric-native-network/couchdb-config/org1-peer0-data/vm.args `
+* 修改对应的路径
+* 进入`http://127.0.0.1:5984/_utils/#`
+* 点击左边第二个的工具，选择Configure a Single Node
+* 填写自己要使用的端口
+* 再点击左边倒数第二个，验证安装
+* 再启动peer节点
+* 点击左边第一个会出现多几个数据库即可

@@ -3,6 +3,22 @@ echo "current path: $(pwd)"
 echo "remove data/peer"
 rm -rf ./data/peer/org2-peer1
 
+# 默认不使用 CouchDB
+export CORE_LEDGER_STATE_STATEDATABASE=leveldb
+
+# 解析参数
+while getopts ":c" opt; do
+  case ${opt} in
+    c )
+      echo "使用 CouchDB 数据库"
+      export CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      ;;
+    \? )
+      echo "无效的选项: $OPTARG" 1>&2
+      ;;
+  esac
+done
+
 export FABRIC_CFG_PATH=$(pwd)/config/peer/org2-peer1
 
 

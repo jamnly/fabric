@@ -1,4 +1,4 @@
-export FABRIC_CFG_PATH=$(pwd)/config/
+export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0/
 export CHANNEL_NAME=mychannel
 
 # 设置 peer0.org1.example.com 环境变量

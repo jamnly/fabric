@@ -4,11 +4,25 @@ echo "remove data/peer"
 rm -rf ./data/peer/org1-peer0
 
 
+# 默认不使用 CouchDB
+export CORE_LEDGER_STATE_STATEDATABASE=leveldb
 
+# 解析参数
+while getopts ":c" opt; do
+  case ${opt} in
+    c )
+      echo "使用 CouchDB 数据库"
+      export CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      ;;
+    \? )
+      echo "无效的选项: $OPTARG" 1>&2
+      ;;
+  esac
+done
 
 export FABRIC_CFG_PATH=$(pwd)/config/peer/org1-peer0
 #export FABRIC_LOGGING_SPEC=INFO
-export FABRIC_LOGGING_SPEC=INFO
+export FABRIC_LOGGING_SPEC=DEBUG
 export CORE_PEER_TLS_ENABLED=true
 export CORE_PEER_PROFILE_ENABLED=true
 
@@ -20,7 +34,7 @@ export CORE_PEER_CHAINCODEADDRESS=peer0.org1.example:7052
 export CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
 export CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.example.com:7051
 export CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
-export CORE_OPERATIONS_LISTENADDRESS=peer0.org2.example.com:7543
+export CORE_OPERATIONS_LISTENADDRESS=peer0.org1.example.com:7543
 export CORE_PEER_LOCALMSPID=Org1MSP
 
 

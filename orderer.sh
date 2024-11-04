@@ -3,7 +3,6 @@ echo "current path: $(pwd)"
 echo "remove data/orderer"
 rm -rf ./data/orderer
 
-# 设置 FABRIC 配置路径
 export FABRIC_CFG_PATH=$(pwd)/config/
 
 # 设置 Orderer 的主机名
