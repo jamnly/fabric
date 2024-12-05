@@ -25,7 +25,7 @@ export PATH=$PATH:$GOROOT/bin
 ### fabric安装
 * 浏览器打开下载压缩包 https://github.com/hyperledger/fabric/releases/download/v2.2.15/hyperledger-fabric-linux-amd64-2.2.15.tar.gz
 * 浏览器打开下载压缩包 https://github.com/hyperledger/fabric-ca/releases/download/v1.5.9/hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz
-* 解压到自己想要的位置 `tar -xzvf hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz -C /home/test/fabric/`
+* 解压到自己想要的位置 `tar -xzvf hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz -C /home/test/fabric/bin`
 * 同上`tar -xzvf hyperledger-fabric-linux-amd64-2.2.15.tar.gz -C /home/test/fabric/`
 * `sudo gedit  ~/.bashrc`
 * 最下面行加入，如果有旧版本的路径不同，记得改路径
@@ -1925,6 +1925,13 @@ $ sudo -u postgres psql $DATABASE_DATABASE -c '\d'
 
 ```
 * （在 MacOS 上，期望看到您的“whoami”而不是 postgres。带有 $DATABASE_USERNAME 的条目将具有该参数的 valuei，无论是设置为环境变量还是 JSON keyval;它不会显示 Literal String。
+## 改变数据库
+* 更改为kingbase数据库
+* 首先要删除掉`/wallet`内的内容
+* 修改`/app`内`explorerconfig.json`内的配置
+* 启动kingbase的时候记得DB_MODE=pg
+* 使用脚本创建数据库
+* 完成
 ### ubuntu手动创建方法
 * 当以上方法无法创建时 （排除node版本的问题）
 * 可以试试以下方法:
